@@ -328,19 +328,14 @@ let privateKey = try Insecure.RSA.PrivateKey(sshRsa: sshFile)
 
 ## FAQ
 
-If you can't connect to a server, it's likely that your server uses a deprecated set of algorithms that NIOSSH doesn't support. No worries though, as Citadel does implement these! Don't use these if you don't have to, as they're deprecated for good (security) reasons.
+If you can't connect to a server, it may only offer an `ssh-rsa` host key, which NIOSSH doesn't support. Citadel implements it! Don't use it if you don't have to, as it's deprecated for good (security) reasons.
 
 ```swift
 // Create a new set of algorithms
 var algorithms = SSHAlgorithms()
 
-algorithms.transportProtectionSchemes = .add([
-    AES128CTR.self
-])
-
-algorithms.keyExchangeAlgorithms = .add([
-    DiffieHellmanGroup14Sha1.self,
-    DiffieHellmanGroup14Sha256.self
+algorithms.publicKeyAlgorihtms = .add([
+    (Insecure.RSA.PublicKey.self, Insecure.RSA.Signature.self)
 ])
 ```
 

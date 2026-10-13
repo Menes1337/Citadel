@@ -337,6 +337,46 @@ final class EndToEndTests: XCTestCase {
             expectsFailure: false
         )
     }
+
+    func testRemotePortForwardRequestsCarryTheUsername() async throws {
+        final class RemotePortForward: RemotePortForwardDelegate, @unchecked /* for testing */ Sendable {
+            var usernames = [String?]()
+
+            func startListening(host: String, port: Int, handler: NIOSSHHandler, eventLoop: EventLoop, context: SSHContext) -> EventLoopFuture<Int?> {
+                usernames.append(context.username)
+                return eventLoop.makeSucceededFuture(4242)
+            }
+
+            func stopListening(host: String, port: Int, eventLoop: EventLoop, context: SSHContext) -> EventLoopFuture<Void> {
+                usernames.append(context.username)
+                return eventLoop.makeSucceededVoidFuture()
+            }
+        }
+
+        struct StopForwarding: Error {}
+
+        try await runTest(
+            perform: { server, client in
+                let forwardServer = RemotePortForward()
+                server.enableRemotePortForward(withDelegate: forwardServer)
+
+                do {
+                    // Throwing from onOpen makes the client cancel the forward before it returns.
+                    try await client.withRemotePortForward(host: "127.0.0.1", port: 0) { forward in
+                        XCTAssertEqual(forward.boundPort, 4242)
+                        throw StopForwarding()
+                    } handleChannel: { channel, _ in
+                        channel.close()
+                    }
+                    XCTFail("The forward should end with StopForwarding")
+                } catch is StopForwarding {}
+
+                XCTAssertEqual(forwardServer.usernames, ["citadel", "citadel"])
+            },
+            matchingError: { _ in false },
+            expectsFailure: false
+        )
+    }
 }
 
 extension SFTPDelegate {

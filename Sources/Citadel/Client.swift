@@ -8,35 +8,8 @@ extension SSHAlgorithms.Modification<NIOSSHTransportProtection.Type> {
         switch self {
         case .add(let algorithms):
             configuration.append(contentsOf: algorithms)
-            
-            for algorithm: any NIOSSHTransportProtection.Type in algorithms {
-                NIOSSHAlgorithms.register(transportProtectionScheme: algorithm)
-            }
         case .replace(with: let algorithms):
             configuration = algorithms
-            
-            for algorithm in algorithms {
-                NIOSSHAlgorithms.register(transportProtectionScheme: algorithm)
-            }
-        }
-    }
-}
-
-extension SSHAlgorithms.Modification<NIOSSHKeyExchangeAlgorithmProtocol.Type> {
-    func apply(to configuration: inout [any NIOSSHKeyExchangeAlgorithmProtocol.Type]) {
-        switch self {
-        case .add(let algorithms):
-            configuration.append(contentsOf: algorithms)
-            
-            for algorithm in algorithms {
-                NIOSSHAlgorithms.register(keyExchangeAlgorithm: algorithm)
-            }
-        case .replace(with: let algorithms):
-            configuration = algorithms
-            
-            for algorithm in algorithms {
-                NIOSSHAlgorithms.register(keyExchangeAlgorithm: algorithm)
-            }
         }
     }
 }
@@ -68,21 +41,16 @@ public struct SSHAlgorithms: Sendable {
     
     /// The enabled TransportProtectionSchemes.
     public var transportProtectionSchemes: Modification<NIOSSHTransportProtection.Type>?
-    
-    /// The enabled KeyExchangeAlgorithms
-    public var keyExchangeAlgorithms: Modification<NIOSSHKeyExchangeAlgorithmProtocol.Type>?
 
     public var publicKeyAlgorihtms: Modification<(NIOSSHPublicKeyProtocol.Type, NIOSSHSignatureProtocol.Type)>?
 
     func apply(to clientConfiguration: inout SSHClientConfiguration) {
         transportProtectionSchemes?.apply(to: &clientConfiguration.transportProtectionSchemes)
-        keyExchangeAlgorithms?.apply(to: &clientConfiguration.keyExchangeAlgorithms)
         publicKeyAlgorihtms?.register()
     }
     
     func apply(to serverConfiguration: inout SSHServerConfiguration) {
         transportProtectionSchemes?.apply(to: &serverConfiguration.transportProtectionSchemes)
-        keyExchangeAlgorithms?.apply(to: &serverConfiguration.keyExchangeAlgorithms)
         publicKeyAlgorihtms?.register()
     }
     
@@ -90,15 +58,6 @@ public struct SSHAlgorithms: Sendable {
 
     public static let all: SSHAlgorithms = {
         var algorithms = SSHAlgorithms()
-
-        algorithms.transportProtectionSchemes = .add([
-            AES128CTR.self
-        ])
-
-        algorithms.keyExchangeAlgorithms = .add([
-            DiffieHellmanGroup14Sha1.self,
-            DiffieHellmanGroup14Sha256.self
-        ])
 
         algorithms.publicKeyAlgorihtms = .add([
             (Insecure.RSA.PublicKey.self, Insecure.RSA.Signature.self),

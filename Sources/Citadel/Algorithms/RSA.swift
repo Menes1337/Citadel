@@ -11,7 +11,8 @@ extension Insecure {
 }
 
 extension Insecure.RSA {
-    public final class PublicKey: NIOSSHPublicKeyProtocol {
+    // The BIGNUMs are set in init and only read afterwards.
+    public final class PublicKey: NIOSSHPublicKeyProtocol, @unchecked Sendable {
         public static let publicKeyPrefix = "ssh-rsa"
         public static let keyExchangeAlgorithms = ["diffie-hellman-group1-sha1", "diffie-hellman-group14-sha1"]
         
@@ -236,7 +237,8 @@ extension Insecure.RSA {
         }
     }
     
-    public final class PrivateKey: NIOSSHAlgorithmSpecificPrivateKeyProtocol {
+    // The BIGNUMs are set in init and only read afterwards.
+    public final class PrivateKey: NIOSSHAlgorithmSpecificPrivateKeyProtocol, @unchecked Sendable {
         public static let keyPrefix = "ssh-rsa"
         
         // Private Exponent
