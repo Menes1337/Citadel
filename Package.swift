@@ -51,6 +51,7 @@ let package = Package(
                 .product(name: "NIOSSH", package: "swift-nio-ssh"),
                 .product(name: "BigInt", package: "BigInt"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "NIOEmbedded", package: "swift-nio"),
             ]
         ),
     ]
